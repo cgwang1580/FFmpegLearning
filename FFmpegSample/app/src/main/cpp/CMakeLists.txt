@@ -5,40 +5,45 @@
 
 cmake_minimum_required(VERSION 3.4.1)
 
-# Creates and names a library, sets it as either STATIC
-# or SHARED, and provides the relative paths to its source code.
-# You can define multiple libraries, and CMake builds them for you.
-# Gradle automatically packages shared libraries with your APK.
+MESSAGE(STATUS "Platform is Andriod.")
+SET(TARGET_ARCH_FLAG ${ANDROID_ABI})
+SET(TARGET_ABI ${TARGET_ARCH_FLAG})
+MESSAGE(STATUS "TARGET_ABI is ${TARGET_ABI}")
 
-add_library( # Sets the name of the library.
-             native-lib
+SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-short-enums")
+SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -fno-exceptions -fno-short-enums -Werror=non-virtual-dtor")
 
-             # Sets the library as a shared library.
-             SHARED
+set(lib_name native-lib)
 
-             # Provides a relative path to your source file(s).
-             native-lib.cpp )
+include_directories(
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/FFmpeg
+)
 
-# Searches for a specified prebuilt library and stores the path as a
-# variable. Because CMake includes system libraries in the search path by
-# default, you only need to specify the name of the public NDK library
-# you want to add. CMake verifies that the library exists before
-# completing its build.
+link_directories(
+        ${CMAKE_CURRENT_SOURCE_DIR}/jniLibs/FFmpeg/${TARGET_ABI}
+)
 
-find_library( # Sets the name of the path variable.
-              log-lib
+set(PROCESSOR_FILES native-lib.cpp)
 
-              # Specifies the name of the NDK library that
-              # you want CMake to locate.
-              log )
+add_library( ${lib_name}
+        SHARED
+        ${PROCESSOR_FILES}
+        )
 
-# Specifies libraries CMake should link to your target library. You
-# can link multiple libraries, such as libraries you define in this
-# build script, prebuilt third-party libraries, or system libraries.
+set(ffmpeg_lib
+        avformat
+        avcodec
+        avfilter
+        swresample
+        swscale
+        avutil
+        )
 
-target_link_libraries( # Specifies the target library.
-                       native-lib
+target_link_libraries(  ${lib_name}
 
-                       # Links the target library to the log library
-                       # included in the NDK.
-                       ${log-lib} )
+                        ${ffmpeg_lib}
+                        log
+                        GLESv3
+                        z
+                        )
